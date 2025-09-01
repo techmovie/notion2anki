@@ -1,0 +1,34 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+DOCKER.md
+*.md
+
+# Temporary files
+tmp/
+.DS_Store
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+
+# Docker files (not needed in container)
+Dockerfile*
+docker-compose*.yaml
+docker-compose*.yml
+
+# Build artifacts
+notion2anki
+main
+*.exe
+
+# OS generated files
+Thumbs.db

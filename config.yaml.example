@@ -1,0 +1,17 @@
+anki:
+  deck_name: "German Words"
+  model_name: "German Words"
+  connect_url: "http://localhost:8765"
+
+notion:
+  token: "your_notion_integration_token_here" // or use 1Password: "op://<vault-name>/<item-name>/[section-name/]<field-name>"
+  database_id: "your_32_character_database_id"
+  poll_interval_seconds: 300
+  primary_key_field: "Word"
+
+processors:
+  - name: "dwds_audio"
+    target_field: "Audio"
+    source_field: "Word"
+    enabled: false
+    config: {}
