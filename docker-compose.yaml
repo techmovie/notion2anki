@@ -1,9 +1,8 @@
 services:
   notion2anki:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: notion2anki-simple
+
+    container_name: notion2anki
+    image: ghcr.io/techmovie/notion2anki:latest
     restart: unless-stopped
     network_mode: host
     volumes:

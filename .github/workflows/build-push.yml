@@ -33,7 +33,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ secrets.DOCKER_USERNAME }}/notion-telegram-bot
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
