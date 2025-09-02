@@ -99,7 +99,7 @@ func (nt *NotionClient) QueryNotionDatabase(ctx context.Context, cursor string) 
 	return result, nil
 }
 
-func (nt *NotionClient) QueryAllPages(ctx context.Context) ([]notion.Page, []string, error) {
+func (nt *NotionClient) QueryAllPages(ctx context.Context) ([]notion.Page, notion.DatabasePageProperties, error) {
 	var allPages []notion.Page
 	var cursor string
 
@@ -117,17 +117,15 @@ func (nt *NotionClient) QueryAllPages(ctx context.Context) ([]notion.Page, []str
 		cursor = *result.NextCursor
 	}
 
-	var pagePropNames []string
+	var pageProperties notion.DatabasePageProperties
 	if len(allPages) > 0 {
 		page := allPages[0]
 		if dbProps, ok := page.Properties.(notion.DatabasePageProperties); ok {
-			for name := range dbProps {
-				pagePropNames = append(pagePropNames, name)
-			}
+			pageProperties = dbProps
 		}
 	}
 
-	return allPages, pagePropNames, nil
+	return allPages, pageProperties, nil
 }
 
 func (nt *NotionClient) ExtractPropertiesFromPage(page notion.Page) map[string]string {
@@ -144,6 +142,12 @@ func (nt *NotionClient) ExtractPropertiesFromPage(page notion.Page) map[string]s
 					if text != "" {
 						properties[name] = text
 					}
+				} else {
+					properties[name] = "-"
+				}
+			case notion.DBPropTypeURL:
+				if prop.URL != nil && *prop.URL != "" {
+					properties[name] = *prop.URL
 				} else {
 					properties[name] = "-"
 				}
@@ -181,4 +185,35 @@ func (nt *NotionClient) ExtractPropertiesFromPage(page notion.Page) map[string]s
 		}
 	}
 	return properties
+}
+
+func (nt *NotionClient) UpdatePageOfDatabase(page notion.Page, props map[string]string, pageProperties notion.DatabasePageProperties) error {
+	params := notion.UpdatePageParams{
+		DatabasePageProperties: notion.DatabasePageProperties{},
+	}
+	for name, value := range props {
+		prop := pageProperties[name]
+		property := notion.DatabasePageProperty{}
+
+		switch prop.Type {
+		case notion.DBPropTypeTitle:
+			property.Title = []notion.RichText{{Text: &notion.Text{Content: value}}}
+		case notion.DBPropTypeRichText:
+			property.RichText = []notion.RichText{{Text: &notion.Text{Content: value}}}
+		case notion.DBPropTypeSelect:
+			property.Select = &notion.SelectOptions{Name: value}
+		case notion.DBPropTypeMultiSelect:
+			options := strings.Split(value, ", ")
+			for _, opt := range options {
+				property.MultiSelect = append(property.MultiSelect, notion.SelectOptions{Name: opt})
+			}
+		case notion.DBPropTypeURL:
+			property.URL = &value
+		}
+
+		params.DatabasePageProperties[name] = property
+
+	}
+	_, err := nt.Client.UpdatePage(context.Background(), page.ID, params)
+	return err
 }

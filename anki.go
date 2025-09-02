@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/dstotijn/go-notion"
 )
 
 var ErrAnkiConnectFailed = errors.New("anki: could not connect to AnkiConnect")
@@ -162,7 +164,7 @@ func (anki *Anki) EnsureDeckExists() error {
 	return fmt.Errorf("no deck name provided")
 }
 
-func (anki *Anki) EnsureModelExists(fields []string) error {
+func (anki *Anki) EnsureModelExists(pageProperties notion.DatabasePageProperties) error {
 	configModelName := anki.Config.ModelName
 	request := AnkiConnectRequest{
 		Action:  "modelNames",
@@ -193,6 +195,10 @@ func (anki *Anki) EnsureModelExists(fields []string) error {
 	}
 
 	log.Printf("Model does not exist, creating: %s", configModelName)
+	fields := []string{}
+	for name := range pageProperties {
+		fields = append(fields, name)
+	}
 	return anki.createModel(configModelName, fields)
 }
 

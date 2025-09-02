@@ -32,7 +32,6 @@ func (p *DWDSAudioProcessor) Name() string {
 }
 
 func (p *DWDSAudioProcessor) Process(noteData *map[string]string, config ProcessorConfig) error {
-	fmt.Println(config)
 	sourceField := config.SourceField
 	targetField := config.TargetField
 	if sourceField == "" || targetField == "" {

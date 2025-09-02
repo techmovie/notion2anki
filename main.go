@@ -68,7 +68,7 @@ func sync(anki *Anki, nt *NotionClient, cfg *Config) error {
 		return err
 	}
 
-	pages, pagePropertyNames, err := nt.QueryAllPages(ctx)
+	pages, pageProperties, err := nt.QueryAllPages(ctx)
 	if err != nil {
 		return err
 	}
@@ -77,16 +77,13 @@ func sync(anki *Anki, nt *NotionClient, cfg *Config) error {
 		return err
 	}
 
-	if err := anki.EnsureModelExists(pagePropertyNames); err != nil {
+	if err := anki.EnsureModelExists(pageProperties); err != nil {
 		return err
 	}
 
 	notesToAdd := []map[string]string{}
 
-	for index, page := range pages {
-		if index > 3 {
-			break
-		}
+	for _, page := range pages {
 		properties := nt.ExtractPropertiesFromPage(page)
 
 		canBeAdded, err := anki.CanAddNotes(properties)
@@ -110,6 +107,11 @@ func sync(anki *Anki, nt *NotionClient, cfg *Config) error {
 			}
 			if err := processor.Process(&properties, processConfig); err != nil {
 				log.Printf("Error from processor %s: %v", processConfig.Name, err)
+			}
+			if err := nt.UpdatePageOfDatabase(page, map[string]string{
+				processConfig.TargetField: properties[processConfig.TargetField],
+			}, pageProperties); err != nil {
+				log.Printf("Failed to update Notion page %s: %v", page.ID, err)
 			}
 		}
 		notesToAdd = append(notesToAdd, properties)
